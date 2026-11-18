@@ -106,12 +106,15 @@ form[data-component="composer"][data-oc-composer-controls]:not([style*="height"]
   min-height: 0 !important;
 }
 form[data-component="composer"][data-oc-composer-controls]:not([style*="height"]) [data-component="composer-scroll"] {
+  display: flex !important;
+  flex-direction: column !important;
   flex: 1 1 auto !important;
   min-height: 0 !important;
   max-height: none !important;
 }
 form[data-component="composer"][data-oc-composer-controls]:not([style*="height"]) [data-component="composer-editor"] {
-  min-height: 100% !important;
+  /* Grow to fill the viewport, but never shrink below the text height. */
+  flex: 1 0 auto !important;
 }
 form[data-component="composer"] [data-oc-composer-resize] {
   position: absolute;
