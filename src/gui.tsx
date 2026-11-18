@@ -17,13 +17,13 @@ import { ComposerControlsRpc, type Prefs } from "./rpc"
 
 /** The RPC client proxy is typed structurally; keep the calls honest here. */
 interface RpcLike {
-  prefs(): Promise<Prefs>
+  prefs(input?: object): Promise<Prefs>
   setPrefs(input: Partial<Prefs>): Promise<Prefs>
 }
 
 /** Sync startup cache so the first paint already uses the remembered values. */
 const CACHE_KEY = "opencode-composer-controls.prefs"
-const COLLAPSE_KEY = "opencode-composer-controls.collapsed"
+const COLLAPSE_KEY = "opencode-composer-controls.collapsed.v2"
 
 /** 180px is the app's own cap; 360px shows roughly four lines at once. */
 const DEFAULT_PREFS: Prefs = { sendKey: "ctrl+enter", heightPx: 360, rememberHeight: true }
@@ -90,9 +90,28 @@ function injectStyles() {
   const style = document.createElement("style")
   style.id = STYLE_ID
   style.textContent = `
+/* The app sizes the form only for its history preview. Outside that mode we
+   own the height: the form becomes a column, the scroll viewport flexes to
+   fill it, and the contenteditable stretches over the whole viewport so the
+   area you can actually type into grows with the box. */
+form[data-component="composer"][data-oc-composer-controls]:not([style*="height"]) {
+  height: var(--oc-cr-h, 360px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+form[data-component="composer"][data-oc-composer-controls]:not([style*="height"]) [data-slot="composer-content"] {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+}
 form[data-component="composer"][data-oc-composer-controls]:not([style*="height"]) [data-component="composer-scroll"] {
-  max-height: var(--oc-cr-max, 180px) !important;
-  min-height: var(--oc-cr-min, auto) !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+form[data-component="composer"][data-oc-composer-controls]:not([style*="height"]) [data-component="composer-editor"] {
+  min-height: 100% !important;
 }
 form[data-component="composer"] [data-oc-composer-resize] {
   position: absolute;
@@ -206,7 +225,7 @@ export default Plugin.define({
     }
 
     // The cache may predate another device's change; the server is the source of truth.
-    void retryRpc("prefs", () => rpc.prefs()).then((value) => {
+    void retryRpc("prefs", () => rpc.prefs({})).then((value) => {
       if (!value) return
       if (userEdited) {
         pushPrefs()
@@ -327,19 +346,21 @@ export default Plugin.define({
     onCleanup(() => window.removeEventListener("keydown", onKeyDownCapture, { capture: true }))
 
     // ---------- height ----------
-    /** The app's own cap; a click on the handle collapses back to this. */
-    const COLLAPSED_HEIGHT = 180
+    /** Collapsed means "hand the composer back to the app's native sizing". */
     const [runtimeHeight, setRuntimeHeight] = createSignal<number | undefined>(undefined)
-    const effectiveHeight = () => (collapsed() ? COLLAPSED_HEIGHT : (runtimeHeight() ?? prefs().heightPx))
+    const effectiveHeight = () => runtimeHeight() ?? prefs().heightPx
 
     const applyHeight = (form: HTMLFormElement, px: number) => {
       const value = `${px}px`
-      if (form.style.getPropertyValue("--oc-cr-max") !== value) form.style.setProperty("--oc-cr-max", value)
-      if (form.style.getPropertyValue("--oc-cr-min") !== value) form.style.setProperty("--oc-cr-min", value)
+      if (form.style.getPropertyValue("--oc-cr-h") !== value) form.style.setProperty("--oc-cr-h", value)
+      // Old caches used a min/max pair; drop it so it cannot fight the height.
+      form.style.removeProperty("--oc-cr-max")
+      form.style.removeProperty("--oc-cr-min")
     }
 
     const clearHeight = (form: HTMLFormElement) => {
       form.removeAttribute("data-oc-composer-controls")
+      form.style.removeProperty("--oc-cr-h")
       form.style.removeProperty("--oc-cr-max")
       form.style.removeProperty("--oc-cr-min")
     }
@@ -352,9 +373,7 @@ export default Plugin.define({
         if (event.button !== 0) return
         event.preventDefault()
         event.stopPropagation()
-        const scroller = form.querySelector('[data-component="composer-scroll"]')
-        const startHeight =
-          scroller instanceof HTMLElement ? Math.round(scroller.getBoundingClientRect().height) : effectiveHeight()
+        const startHeight = Math.round(form.getBoundingClientRect().height)
         const startY = event.clientY
         let moved = false
         let lastHeight = startHeight
@@ -419,6 +438,11 @@ export default Plugin.define({
           continue
         }
         if (!form.querySelector("[data-oc-composer-resize]")) form.appendChild(createHandle(form))
+        // Collapsed: no override at all, the app's own 180px cap applies.
+        if (collapsed()) {
+          clearHeight(form)
+          continue
+        }
         form.setAttribute("data-oc-composer-controls", "")
         applyHeight(form, effectiveHeight())
       }
