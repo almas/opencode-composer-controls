@@ -65,12 +65,13 @@ GUI (gui.tsx)                              Server (index.ts)
     plain Enter -> preventDefault            RPC: composer-controls/setPrefs
       -> insertLineBreak                         |
   form[data-component="composer"]                +-- ctx.storage に保存
-    --oc-cr-max / --oc-cr-min で高さ上書き
+    --oc-cr-h でフォームの高さを指定
+    composer-scroll / composer-editor を flex で伸ばす
     上端ハンドル（pointer drag）
 ```
 
 - **Enter の横取り**: ウィンドウの capture フェーズで `preventDefault()` + `stopPropagation()` し、アプリの Enter 送信分岐に届く前に改行を挿入します。挿入はアプリの Shift+Enter と同じ `insertLineBreak` 経路です。
-- **高さ**: アプリは `composer-scroll` に `max-h-[180px]` を付けています。プラグインはフォームに `data-oc-composer-controls` を付け、CSS 変数 `--oc-cr-max` / `--oc-cr-min` で上書きします。
+- **高さ**: アプリは `composer-scroll` に `max-h-[180px]` を付けています。プラグインはフォームに `data-oc-composer-controls` を付け、CSS 変数 `--oc-cr-h` でフォーム全体の高さを指定します。フォームを縦 flex にし、スクロール領域と contenteditable を残りいっぱいに伸ばすので、**枠だけでなく実際に文字を入力できる範囲全体**が広がります。
 - **履歴プレビュー**: 入力欄の上で ↑ を押すとアプリがフォーム自身の高さをインライン指定します。このモードではアプリが高さを所有するため、プラグインは上書きもハンドルも解除します（閉じると自動で戻ります）。
 
 ## 開発
