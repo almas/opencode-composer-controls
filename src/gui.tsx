@@ -156,11 +156,7 @@ form[data-component="composer"] [data-oc-composer-resize]::after {
   background: transparent !important;
   color: var(--v2-icon-icon-muted, var(--v2-text-text-muted, rgba(145, 145, 145, 0.92))) !important;
 }
-[data-slot="titlebar-update"]:has(use[href="#opencode-v2-icon-outline-rotate-clockwise"]) > button svg,
-[data-slot="titlebar-update"]:has(use[href="#opencode-v2-icon-outline-rotate-clockwise"]) > button use {
-  fill: currentColor !important;
-  color: inherit !important;
-}
+
 [data-slot="titlebar-update"]:has(use[href="#opencode-v2-icon-outline-rotate-clockwise"]) > button:hover {
   background: var(--v2-overlay-simple-overlay-hover, rgba(128, 128, 128, 0.16)) !important;
 }
