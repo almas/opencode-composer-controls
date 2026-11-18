@@ -11,7 +11,7 @@
  *    a drag handle on the top edge of every composer; dragging resizes, a
  *    click collapses back to the default.
  */
-import { Plugin, SettingsPage } from "@opencode/plugin/gui"
+import { Command, Plugin, SettingsPage, TitlebarItem } from "@opencode/plugin/gui"
 import { createSignal, onCleanup } from "solid-js"
 import { ComposerControlsRpc, type Prefs } from "./rpc"
 
@@ -158,6 +158,8 @@ export default Plugin.define({
       "composer-controls.settings.hint":
         "Drag the top edge of the input field to resize it; a single click on the edge restores the default height.",
       "composer-controls.handle.tooltip": "Drag to resize · click to restore the default height",
+      "composer-controls.reload.label": "Reload UI",
+      "composer-controls.reload.title": "Reload the window so updated plugin code takes effect",
     },
     ja: {
       "composer-controls.settings.title": "入力欄",
@@ -169,6 +171,8 @@ export default Plugin.define({
       "composer-controls.settings.hint":
         "入力欄の上端をドラッグするとサイズ変更できます。上端をクリックすると既定の高さに戻ります。",
       "composer-controls.handle.tooltip": "ドラッグでサイズ変更・クリックで既定の高さに戻す",
+      "composer-controls.reload.label": "再読み込み",
+      "composer-controls.reload.title": "プラグインの更新を反映するためウィンドウを読み込み直します",
     },
   },
   setup(ctx) {
@@ -181,10 +185,36 @@ export default Plugin.define({
       | "composer-controls.settings.remember"
       | "composer-controls.settings.hint"
       | "composer-controls.handle.tooltip"
+      | "composer-controls.reload.label"
+      | "composer-controls.reload.title"
     const t = (key: DictKey) => ctx.t(key)
 
     const rpc = ctx.client.rpc(ComposerControlsRpc) as unknown as RpcLike
     injectStyles()
+
+    // ---------- reload ----------
+    // The Ctrl+R accelerator is unreliable in some desktop environments, so the
+    // same thing the app menu's "View → Reload" does — reloading the renderer —
+    // gets an always-visible titlebar pill and a palette command.
+    const reloadUi = () => window.location.reload()
+    ctx.add(TitlebarItem, {
+      id: "composer-controls-reload",
+      get label() {
+        return t("composer-controls.reload.label")
+      },
+      get title() {
+        return t("composer-controls.reload.title")
+      },
+      icon: "outline-rotate-clockwise",
+      run: reloadUi,
+    })
+    ctx.add(Command, {
+      id: "composer-controls.reload",
+      get title() {
+        return t("composer-controls.reload.title")
+      },
+      run: reloadUi,
+    })
 
     // ---------- preferences ----------
     const [prefs, setPrefs] = createSignal<Prefs>(loadCache() ?? { ...DEFAULT_PREFS })
