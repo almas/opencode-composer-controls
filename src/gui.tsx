@@ -145,22 +145,30 @@ form[data-component="composer"] [data-oc-composer-resize]::after {
 /* The host styles every plugin TitlebarItem like an update pill: accent-blue
    text on a filled circle. A reload button is a routine control, not a
    notification, so tone it down to the muted gray the neighbouring ghost-muted
-   titlebar icons use. :has() pins the rule to the pill carrying the
-   rotate-clockwise icon so other plugins' items keep their own look. */
-[data-slot="titlebar-update"]:has(path[d^="M14.1992 8C14.1992 9.18669"]) {
-  background-color: transparent;
+   titlebar icons use. :has() pins the rule to the pill whose icon is the
+   rotate-clockwise sprite (the host draws it with <use href>, not an inline
+   path), so other plugins' items keep their own look. */
+[data-slot="titlebar-update"]:has(use[href="#opencode-v2-icon-outline-rotate-clockwise"]) {
+  background: transparent !important;
+  border-color: transparent !important;
 }
-[data-slot="titlebar-update"]:has(path[d^="M14.1992 8C14.1992 9.18669"]) > button {
-  color: var(--v2-icon-icon-muted, var(--v2-text-text-muted, rgba(128, 128, 128, 0.9)));
+[data-slot="titlebar-update"]:has(use[href="#opencode-v2-icon-outline-rotate-clockwise"]) > button {
+  background: transparent !important;
+  color: var(--v2-icon-icon-muted, var(--v2-text-text-muted, rgba(145, 145, 145, 0.92))) !important;
 }
-[data-slot="titlebar-update"]:has(path[d^="M14.1992 8C14.1992 9.18669"]) > button:hover {
-  background-color: var(--v2-overlay-simple-overlay-hover, rgba(128, 128, 128, 0.14));
+[data-slot="titlebar-update"]:has(use[href="#opencode-v2-icon-outline-rotate-clockwise"]) > button svg,
+[data-slot="titlebar-update"]:has(use[href="#opencode-v2-icon-outline-rotate-clockwise"]) > button use {
+  fill: currentColor !important;
+  color: inherit !important;
 }
-[data-slot="titlebar-update"]:has(path[d^="M14.1992 8C14.1992 9.18669"]) > button:active {
-  background-color: var(--v2-overlay-simple-overlay-pressed, rgba(128, 128, 128, 0.22));
+[data-slot="titlebar-update"]:has(use[href="#opencode-v2-icon-outline-rotate-clockwise"]) > button:hover {
+  background: var(--v2-overlay-simple-overlay-hover, rgba(128, 128, 128, 0.16)) !important;
 }
-[data-slot="titlebar-update"]:has(path[d^="M14.1992 8C14.1992 9.18669"]) [data-slot="titlebar-update-label"] {
-  color: var(--v2-text-text-muted, rgba(128, 128, 128, 0.9));
+[data-slot="titlebar-update"]:has(use[href="#opencode-v2-icon-outline-rotate-clockwise"]) > button:active {
+  background: var(--v2-overlay-simple-overlay-pressed, rgba(128, 128, 128, 0.24)) !important;
+}
+[data-slot="titlebar-update"]:has(use[href="#opencode-v2-icon-outline-rotate-clockwise"]) [data-slot="titlebar-update-label"] {
+  color: var(--v2-text-text-muted, rgba(145, 145, 145, 0.92)) !important;
 }
 `
   document.head.appendChild(style)
