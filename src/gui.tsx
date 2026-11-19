@@ -411,15 +411,17 @@ export default Plugin.define({
       const value = `${px}px`
       if (form.style.getPropertyValue("--oc-cr-h") !== value) form.style.setProperty("--oc-cr-h", value)
       // Old caches used a min/max pair; drop it so it cannot fight the height.
-      form.style.removeProperty("--oc-cr-max")
-      form.style.removeProperty("--oc-cr-min")
+      // Only when they are really there: a no-op write still dirties the style
+      // attribute, and the observer below watches exactly that.
+      if (form.style.getPropertyValue("--oc-cr-max")) form.style.removeProperty("--oc-cr-max")
+      if (form.style.getPropertyValue("--oc-cr-min")) form.style.removeProperty("--oc-cr-min")
     }
 
     const clearHeight = (form: HTMLFormElement) => {
-      form.removeAttribute("data-oc-composer-controls")
-      form.style.removeProperty("--oc-cr-h")
-      form.style.removeProperty("--oc-cr-max")
-      form.style.removeProperty("--oc-cr-min")
+      if (form.hasAttribute("data-oc-composer-controls")) form.removeAttribute("data-oc-composer-controls")
+      for (const prop of ["--oc-cr-h", "--oc-cr-max", "--oc-cr-min"]) {
+        if (form.style.getPropertyValue(prop)) form.style.removeProperty(prop)
+      }
     }
 
     function createHandle(form: HTMLFormElement): HTMLElement {
@@ -500,7 +502,7 @@ export default Plugin.define({
           clearHeight(form)
           continue
         }
-        form.setAttribute("data-oc-composer-controls", "")
+        if (!form.hasAttribute("data-oc-composer-controls")) form.setAttribute("data-oc-composer-controls", "")
         applyHeight(form, effectiveHeight())
       }
     }
